@@ -1,6 +1,8 @@
 # CardVoz API 🎙️🃏
 
-API RESTful em **C# (.NET 9)** desenvolvida para o projeto **CardVoz** (Flashcards acessíveis para estudo por voz), do Instituto Federal do Tocantins (IFTO - Campus Palmas).
+API RESTful em **C# (.NET 9)** do **CardVoz**, app de fichas de estudo (flashcards) para pessoas cegas e com baixa visão, do Instituto Federal do Tocantins (IFTO, *Campus* Palmas).
+
+O CardVoz tem quatro repositórios: o site (`cardvoz`, Next.js estático), esta API, o banco (`cardvoz-db`, migrations do Supabase) e o painel da equipe (`cardvoz-admin`). Regras do projeto e combinados da equipe, para pessoas e para ferramentas de IA: [`AGENTS.md`](AGENTS.md).
 
 ---
 
@@ -24,9 +26,9 @@ cardvoz-api/
 
 ## ⚡ Recursos e Diferenciais
 
-- **Acessibilidade por Voz**: Rastreamento de respostas acionadas por comandos de voz (`voiceUsed`) e campo `voiceNotes` para orientações fonéticas em cada ficha.
-- **Login com Google**: o site usa só o Google (fluxo *authorization code* com PKCE). A API troca o código pelo `id_token`, confere a assinatura e devolve os mesmos tokens próprios do login por senha. Na primeira vez a conta é criada sozinha.
-- **Contas e login**: cadastro e login com e-mail e senha continuam disponíveis na API (o site não os usa); senha guardada só como hash (PBKDF2-SHA512, 100 mil iterações, com salt); sessão com token de acesso JWT de 15 minutos e token de renovação de 30 dias.
+- **Feita para leitor de tela**: quem usa o CardVoz estuda com o leitor de tela do aparelho (TalkBack, NVDA); o site não tem voz própria. Os campos `voiceUsed` (na resposta de estudo) e `voiceNotes` (na ficha) existem, mas o site não os usa nem exibe.
+- **Duas formas de entrar**: e-mail e senha, ou Google (fluxo *authorization code* com PKCE). No Google, a API troca o código pelo `id_token`, confere a assinatura e devolve os mesmos tokens próprios do login por senha; na primeira vez a conta é criada sozinha.
+- **Contas e login**: senha guardada só como hash (PBKDF2-SHA512, 100 mil iterações, com salt); sessão com token de acesso JWT de 15 minutos e token de renovação de 30 dias.
 - **Baralhos privados**: cada pessoa só vê, estuda, edita e exclui os próprios baralhos, fichas e sessões. Recursos de outra pessoa respondem 404.
 - **IDs aleatórios**: todos os registros usam UUID v4, impossível de adivinhar ou varrer em sequência.
 - **Banco de Dados PostgreSQL (Supabase)**: O esquema (tabelas, índices e RLS) fica no repositório [`cardvoz-db`](../cardvoz-db), como migrations do Supabase. A API não cria tabelas: ela só se conecta e avisa no log se as migrations não tiverem sido aplicadas.
@@ -126,12 +128,12 @@ Todos os IDs são UUID (texto, ex.: `"3f6c2b1e-…"`).
 
 > **A fazer:** guardar o idioma das fichas (perguntas e respostas) no baralho. Ver [`docs/tarefas/idioma-das-fichas.md`](docs/tarefas/idioma-das-fichas.md).
 
-### Cartões (`/api/cards`)
-- `GET /api/decks/{deckId}/cards` - Lista cartões de um baralho
-- `GET /api/cards/{id}` - Detalhes de um cartão
-- `POST /api/cards` - Adiciona novo cartão a um baralho
-- `PUT /api/cards/{id}` - Atualiza um cartão
-- `DELETE /api/cards/{id}` - Remove um cartão
+### Fichas (`/api/cards`)
+- `GET /api/decks/{deckId}/cards` - Lista as fichas de um baralho
+- `GET /api/cards/{id}` - Detalhes de uma ficha
+- `POST /api/cards` - Adiciona uma ficha a um baralho
+- `PUT /api/cards/{id}` - Atualiza uma ficha
+- `DELETE /api/cards/{id}` - Remove uma ficha
 
 ### Sessões de Estudo (`/api/study-sessions`)
 - `POST /api/study-sessions/start` - Inicia sessão de estudo por `deckId` ou `deckSlug`
@@ -157,7 +159,20 @@ Só para contas com `IsAdmin` (as demais recebem `403`). A API confere no banco 
 - `PUT /api/admin/shared-decks/{id}` - Substitui título, descrição e fichas. As cópias já feitas não mudam
 - `DELETE /api/admin/shared-decks/{id}` - Exclui. As cópias já feitas continuam com quem copiou
 
+### Pedidos em andamento
+- **Idioma das fichas**: guardar o idioma das perguntas e das respostas no baralho ([`docs/tarefas/idioma-das-fichas.md`](docs/tarefas/idioma-das-fichas.md)). A migration já está no `cardvoz-db`.
+- **Menos chamadas (parte 4 do modo sem login)**: rotas para importar um baralho inteiro, buscar só o que mudou e fechar uma sessão de estudo numa chamada. Descrita em `docs/tarefas/parte-4-menos-chamadas.md`, na branch `docs/parte-4-menos-chamadas`. O site já usa essas rotas quando existem e volta ao caminho antigo quando respondem 404/405.
+
+---
+
+## 🤝 Para quem continua o projeto
+
+- Leia o [`AGENTS.md`](AGENTS.md): arquitetura, regras de segurança, como mudar o banco e os combinados da equipe. Vale para quem usa ou não ferramentas de IA (o `CLAUDE.md` só aponta para ele).
+- **Publicação:** push na `main` publica. O GitHub Actions constrói a imagem Docker e dispara o deploy no Render pelo secret `RENDER_DEPLOY_HOOK_URL`. Em pull request, só constrói. Trabalhe numa branch e abra PR.
+- **Ordem de publicação** de uma mudança que mexe em tabela: migration no `cardvoz-db` → API → site.
+- Mudança pedida por outra pessoa do grupo chega descrita em `docs/tarefas/`.
+
 ---
 
 ## 📄 Licença
-Projeto acadêmico de extensão do IFTO Palmas.
+Projeto acadêmico de extensão do IFTO, *Campus* Palmas.
