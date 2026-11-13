@@ -133,6 +133,11 @@ Todos os IDs são UUID (texto, ex.: `"3f6c2b1e-…"`).
 - Contas criadas pelo Google e quem cria senha pelo link de "Esqueci minha senha" ficam confirmadas. O `user` devolvido no login traz `emailConfirmed`.
 - **Junção com o Google:** se a conta com senha tiver o e-mail confirmado, entrar com o Google no mesmo e-mail liga o Google a essa conta (a pessoa entra dos dois jeitos). Sem confirmar, a API responde `409` pedindo para confirmar o e-mail no Perfil.
 
+### Passe do painel (`/api/auth`)
+- `POST /api/auth/admin-pass` - Com login de admin. Devolve `{ "code", "expiresAt" }`: código de uso único que vale 1 minuto. O site abre `cardvoz-admin/entrar/#passe=<code>` com ele
+- `POST /api/auth/admin-pass/redeem` - `{ "code" }`. Troca o passe por uma sessão nova do painel (mesma resposta do login). Código usado, vencido ou de conta que deixou de ser admin: `400`
+- O passe fica só na memória da API (sem tabela): se ela reiniciar nesse minuto, o painel mostra o login normal ([`docs/tarefas/passe-do-painel.md`](docs/tarefas/passe-do-painel.md))
+
 ### Conta (`/api/account`)
 Direitos da pessoa sobre os próprios dados (LGPD).
 - `GET /api/account/export` - Tudo o que a conta guarda em JSON: dados da conta, baralhos com fichas (acertos, erros, revisão) e histórico de estudo. Sem hash de senha nem tokens

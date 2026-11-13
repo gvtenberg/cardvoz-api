@@ -247,6 +247,42 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Passe do painel: código de uso único (1 minuto) para abrir o cardvoz-admin já
+    /// logado. Só para admins. O site o põe depois do # do endereço do painel.
+    /// </summary>
+    [HttpPost("admin-pass")]
+    [Authorize]
+    [AdminOnly]
+    [EnableRateLimiting(RateLimitPolicies.Session)]
+    [ProducesResponseType(typeof(AdminPassResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public ActionResult<AdminPassResponseDto> CreateAdminPass([FromServices] AdminPassService passes)
+    {
+        var (code, expiresAt) = passes.Create(User.GetUserId());
+        return Ok(new AdminPassResponseDto { Code = code, ExpiresAt = expiresAt });
+    }
+
+    /// <summary>Troca o passe do painel por uma sessão nova (tokens próprios do painel).</summary>
+    [HttpPost("admin-pass/redeem")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<AuthResponseDto>> RedeemAdminPass(
+        [FromBody] RedeemAdminPassDto dto, [FromServices] AdminPassService passes)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var userId = passes.Redeem(dto.Code);
+        var response = userId == null ? null : await _authService.SignInAdminAsync(userId.Value);
+        return response == null
+            ? BadRequest(new { message = "Este acesso ao painel não vale mais. Entre com a sua conta." })
+            : Ok(response);
+    }
+
+    /// <summary>
     /// Dados da pessoa logada.
     /// </summary>
     [HttpGet("me")]

@@ -29,5 +29,7 @@ public interface IAuthService
     Task<AuthResult> LoginWithGoogleAsync(GoogleIdentity identity);
     Task<AuthResult> RefreshAsync(string refreshToken);
     Task LogoutAsync(string refreshToken);
+    /// <summary>Nova sessão para uma conta que ainda é admin (passe do painel); null se não for mais.</summary>
+    Task<AuthResponseDto?> SignInAdminAsync(Guid userId);
     Task<UserResponseDto?> GetProfileAsync(Guid userId);
 }

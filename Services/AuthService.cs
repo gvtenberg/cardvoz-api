@@ -238,6 +238,15 @@ public class AuthService : IAuthService
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, DateTime.UtcNow));
     }
 
+    public async Task<AuthResponseDto?> SignInAdminAsync(Guid userId)
+    {
+        // Confere de novo no banco: quem perdeu o admin (ou excluiu a conta) depois de
+        // pedir o passe não entra no painel
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsAdmin);
+        if (user == null) return null;
+        return (await IssueTokensAsync(user)).Response;
+    }
+
     public async Task<UserResponseDto?> GetProfileAsync(Guid userId)
     {
         var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);

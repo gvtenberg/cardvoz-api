@@ -201,6 +201,8 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+// Singleton: os passes do painel ficam na memória entre um pedido e outro
+builder.Services.AddSingleton<AdminPassService>();
 builder.Services.AddHttpClient<IGoogleAuthService, GoogleAuthService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(15);
